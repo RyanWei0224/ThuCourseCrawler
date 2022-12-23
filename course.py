@@ -11,19 +11,12 @@ from util import *
 
 def main():
 	x = CoreCrawler(cookies = COOKIES, intv = INTV)
-	'''
-	if TRY_LOGIN:
-		while not x.login():
-			s = input('retry? (Type anything to stop, tap enter to continue)')
-			if s:
-				return 0
-	'''
 	x.crawl_courses(COURSES)
 
 class CoreCrawler():
 	def __init__(self, cookies = dict(), intv = 3):
 		try:
-			with open('cookies.pkl', 'rb') as f:
+			with open(COOKIES_FILE, 'rb') as f:
 				self.cookies = pickle.load(f)
 			assert self.is_logged_in()
 		except Exception as e:
@@ -33,7 +26,7 @@ class CoreCrawler():
 		self.logFile = 'log.txt'
 
 	def __del__(self):
-		with open('cookies.pkl', 'wb') as f:
+		with open(COOKIES_FILE, 'wb') as f:
 			pickle.dump(self.cookies, f)
 
 	def log(self, txt):
@@ -87,13 +80,11 @@ class CoreCrawler():
 			print('Login Successful!')
 			os.remove(PIC_FILE)
 			return True
-		elif '登录失败：验证码不正确！' in res.text:
-			print('Login failed! Wrong captcha.')
+		match = re.search(r'<div align="center">([^<]*)</div>', res.text)
+		if match is not None:
+			print('Login failed!', match[1])
 			return False
-		elif '登录失败' in res.text:
-			print('Login failed!')
-			return False
-		print('Don\'t know what\'s wrong.')
+		print('Login failed! Don\'t know what\'s wrong...')
 		return False
 
 	def try_login(self):
@@ -105,6 +96,7 @@ class CoreCrawler():
 
 	def assert_login(self):
 		print('Timeout, trying to login...')
+		self.cookies.clear()
 		try:
 			assert self.try_login()
 		except Exception as e:
@@ -169,6 +161,9 @@ class CoreCrawler():
 			raise ValueError(msg)
 
 	def crawl_courses(self, courses):
+		if not courses:
+			print('Course list is empty. No work to do...')
+			return
 		t = time.time() + self.intv
 		while True:
 			for course in courses:

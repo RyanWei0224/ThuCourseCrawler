@@ -12,6 +12,8 @@ else:
 		'JSESSIONID': JSESSIONID,
 	}
 
+COOKIES_FILE = 'cookies.pkl'
+
 URL = 'http://zhjwxk.cic.tsinghua.edu.cn/xkYjs.vxkYjsXkbBs.do'
 
 GET_URL = 'http://zhjwxk.cic.tsinghua.edu.cn/xkYjs.vxkYjsXkbBs.do'
