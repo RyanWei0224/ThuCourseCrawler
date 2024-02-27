@@ -24,6 +24,7 @@ class CoreCrawler():
 
 		self.intv = intv
 		self.logFile = 'log.txt'
+		self.t = -1
 
 	def __del__(self):
 		with open(COOKIES_FILE, 'wb') as f:
@@ -32,6 +33,15 @@ class CoreCrawler():
 	def log(self, txt):
 		with open(self.logFile, 'w', encoding = 'utf-8') as f:
 			print(txt, file = f)
+
+	def wait_t(self, intv):
+		t = self.t + intv - time.time()
+		if t > 0:
+			time.sleep(t)
+		self.set_t()
+
+	def set_t(self):
+		self.t = time.time()
 
 	def try_get(self, url, method = 'get', **kwargs):
 		err = None
@@ -47,6 +57,7 @@ class CoreCrawler():
 			except Exception as e:
 				print(e)
 				err = e
+				time.sleep(i+1)
 			else:
 				self.cookies.update(res.cookies)
 				return res
@@ -89,9 +100,12 @@ class CoreCrawler():
 
 	def try_login(self):
 		while not self.login():
+			self.set_t()
 			s = input('retry? (Type anything to stop, tap enter to continue)')
 			if s:
 				return False
+			self.wait_t(2)
+		time.sleep(1)
 		return True
 
 	def assert_login(self):
@@ -123,6 +137,8 @@ class CoreCrawler():
 				if TIMEOUT_STR in res.text:
 					self.assert_login()
 					continue
+				if FREQ_STR in res.text:
+					assert False, 'The request is too frequent! Please increase INTV and try again.'
 				self.log(res.text)
 				assert False, 'Get token failed.'
 			return m[1]
@@ -146,6 +162,8 @@ class CoreCrawler():
 				if TIMEOUT_STR in res.text:
 					self.assert_login()
 					continue
+				if FREQ_STR in res.text:
+					assert False, 'The request is too frequent! Please increase INTV and try again.'
 				self.log(res.text)
 				assert False, 'Get response failed.'
 			break
@@ -164,15 +182,11 @@ class CoreCrawler():
 		if not courses:
 			print('Course list is empty. No work to do...')
 			return
-		t = time.time() + self.intv
 		while True:
 			for course in courses:
 				if self.crawl_course(course):
 					return True
-				t -= time.time()
-				if t > 0:
-					time.sleep(t)
-				t = time.time() + self.intv
+				time.sleep(self.intv)
 
 if __name__ == '__main__':
 	main()

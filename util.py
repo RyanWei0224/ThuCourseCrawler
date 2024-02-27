@@ -3,6 +3,7 @@ from config import *
 # For crawl courses:
 
 TIMEOUT_STR = '用户登陆超时或访问内容不存在。请重试，如访问仍然失败，请与系统管理员联系。'
+FREQ_STR = '操作过于频繁，请重新登录。'
 
 if TRY_LOGIN:
 	COOKIES = {}
